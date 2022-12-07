@@ -1,4 +1,3 @@
-
 const MESSAGE = {
   ERROR: {
     BAD_REQUEST: 'BAD REQUEST',
@@ -9,10 +8,9 @@ const MESSAGE = {
     CREATED: 'CREATED',
     DELETE: 'DELETED',
     PUT: 'PUTED',
-    PATCH: 'PATCHED'
-  }
-}
-
+    PATCH: 'PATCHED',
+  },
+};
 const STATUS = {
   ERROR: {
     BAD_REQUEST: 400,
@@ -22,7 +20,7 @@ const STATUS = {
   INFO: {
     OK: 200,
     CREATED: 201,
-  }
-}
+  },
+};
 
-module.exports = { MESSAGE, STATUS }
+module.exports = { MESSAGE, STATUS };

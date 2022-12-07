@@ -1,8 +1,6 @@
-
-const { MESSAGE, STATUS } = require('./constants.js');
+const { MESSAGE, STATUS } = require('./constants');
 
 function NotFound(req, res) {
-  res.status(STATUS.ERROR.NOT_FOUND).send({ message: MESSAGE.ERROR.NOT_FOUND});
-};
-
-module.exports = { NotFound }
+  res.status(STATUS.ERROR.NOT_FOUND).send({ message: MESSAGE.ERROR.NOT_FOUND });
+}
+module.exports = { NotFound };

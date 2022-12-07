@@ -1,20 +1,8 @@
 {
-    "env": {
-        "es2021": true,
-        "node": true
-    },
     "extends": [
         "eslint:recommended",
         "plugin:react/recommended",
         "airbnb-base"
-    ],
-    "overrides": [
-    ],
-    "parserOptions": {
-        "ecmaVersion": "latest"
-    },
-    "plugins": [
-        "js"
     ],
     "rules": {
         "no-underscore-dangle": ["off", { "allow": ["id"] }]
