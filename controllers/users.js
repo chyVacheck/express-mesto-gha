@@ -26,23 +26,20 @@ class Users {
   // ? возвращает пользователя
   getOne(req, res) {
     user.findById(req.params.userId)
+      .orFail(new Error('NotValid'))
       .then((data) => {
-        if (data) {
-          res.send({ user: data });
-        } else {
-          NotFound();
-        }
+        res.send({ user: data });
       })
       .catch((err) => {
         // ? если длина id правильная, но такого нет в базе
-        if (err.name === 'TypeError') {
-          res.status(STATUS.ERROR.NOT_FOUND).send({ message: `USER ${MESSAGE.ERROR.NOT_FOUND}` });
+        if ((err.name === 'TypeError') || (err.message === 'NotValid')) {
+          NotFound(req, res);
         } else {
           // ? если длина id неверная
           if (err.name === 'CastError') {
             res.status(STATUS.ERROR.BAD_REQUEST).send({ message: MESSAGE.ERROR.BAD_REQUEST });
-          }
-          // ? для других ошибок
+            return;
+          }// ? для других ошибок
           res.status(STATUS.ERROR.SERVER).send({ message: MESSAGE.ERROR.SERVER });
         }
       });
@@ -67,24 +64,24 @@ class Users {
 
   setUserInfo(req, res) {
     const { name, about } = req.body;
+
     user.findByIdAndUpdate(
       req.user._id,
       { name, about },
       { new: true, runValidators: true },
     )
-      .then((data) => {
-        if (data) {
-          res.status(STATUS.INFO.OK).send({ message: `INFO ${MESSAGE.INFO.PATCH}`, Name: name, About: about });
-        } else {
-          res.status(STATUS.ERROR.NOT_FOUND).send({ message: MESSAGE.ERROR.NOT_FOUND });
-        }
+      .orFail(new Error('NotValid'))
+      .then(() => {
+        res.status(STATUS.INFO.OK).send({ message: `INFO ${MESSAGE.INFO.PATCH}`, Name: name, About: about });
       })
       .catch((err) => {
         if ((err.name === 'CastError') || (err.name === 'ValidationError')) {
           res.status(STATUS.ERROR.BAD_REQUEST).send({ message: MESSAGE.ERROR.BAD_REQUEST });
         } else {
-          res.status(STATUS.ERROR.SERVER).send({ message: MESSAGE.ERROR.SERVER });
+          NotFound(req, res);
+          return;
         }
+        res.status(STATUS.ERROR.SERVER).send({ message: MESSAGE.ERROR.SERVER });
       });
   }
 
@@ -106,8 +103,10 @@ class Users {
         if ((err.name === 'CastError') || (err.name === 'ValidationError')) {
           res.status(STATUS.ERROR.BAD_REQUEST).send({ message: MESSAGE.ERROR.BAD_REQUEST });
         } else {
-          res.status(STATUS.ERROR.SERVER).send({ message: MESSAGE.ERROR.SERVER });
+          NotFound(req, res);
+          return;
         }
+        res.status(STATUS.ERROR.SERVER).send({ message: MESSAGE.ERROR.SERVER });
       });
   }
 }
