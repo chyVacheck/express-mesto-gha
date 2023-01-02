@@ -1,3 +1,4 @@
+/* eslint-disable consistent-return */
 /* eslint-disable class-methods-use-this */
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
@@ -68,7 +69,6 @@ class Users {
           return next(new NotAuthorized('Email or password is incorrect!'));
         }
         next(err);
-        return 0; // что бы eslint не ругался
       });
   }
 
@@ -93,23 +93,17 @@ class Users {
   }
 
   // ? возвращает пользователя по _id
-  getOne(req, res) {
+  getOne(req, res, next) {
     user.findById(req.params.userId)
       .orFail(new Error('NotValid'))
       .then((data) => {
         res.send({ user: data });
       })
       .catch((err) => {
-        // ? если длина id правильная, но такого нет в базе
-        if ((err.name === 'TypeError') || (err.message === 'NotValid')) {
-          NotFound(req, res);
+        if (err.name === 'CastError') {
+          next(new BadRequestError(MESSAGE.ERROR.BAD_REQUEST));
         } else {
-          // ? если длина id неверная
-          if (err.name === 'CastError') {
-            res.status(STATUS.ERROR.BAD_REQUEST).send({ message: MESSAGE.ERROR.BAD_REQUEST });
-            return;
-          }// ? для других ошибок
-          res.status(STATUS.ERROR.SERVER).send({ message: MESSAGE.ERROR.SERVER });
+          next(err);
         }
       });
   }
@@ -123,7 +117,7 @@ class Users {
 
   // * PATCH
   // ? устанавливает новое значение информации о пользователи
-  setUserInfo(req, res) {
+  setUserInfo(req, res, next) {
     const { name, about } = req.body;
 
     user.findByIdAndUpdate(
@@ -136,18 +130,16 @@ class Users {
         res.status(STATUS.INFO.OK).send({ message: `INFO ${MESSAGE.INFO.PATCH}`, Name: name, About: about });
       })
       .catch((err) => {
-        if ((err.name === 'CastError') || (err.name === 'ValidationError')) {
-          res.status(STATUS.ERROR.BAD_REQUEST).send({ message: MESSAGE.ERROR.BAD_REQUEST });
+        if ((err.name === 'ValidationError') || (err.name === 'CastError')) {
+          next(new NotFoundError(MESSAGE.ERROR.NOT_FOUND));
         } else {
-          NotFound(req, res);
-          return;
+          next(err);
         }
-        res.status(STATUS.ERROR.SERVER).send({ message: MESSAGE.ERROR.SERVER });
       });
   }
 
   // ? устанавливает новый аватар пользователя
-  setUserAvatar(req, res) {
+  setUserAvatar(req, res, next) {
     const { avatar } = req.body;
     user.findByIdAndUpdate(
       req.user._id,
@@ -162,13 +154,11 @@ class Users {
         }
       })
       .catch((err) => {
-        if ((err.name === 'CastError') || (err.name === 'ValidationError')) {
-          res.status(STATUS.ERROR.BAD_REQUEST).send({ message: MESSAGE.ERROR.BAD_REQUEST });
+        if ((err.name === 'ValidationError') || (err.name === 'CastError')) {
+          next(new BadRequestError(MESSAGE.ERROR.BAD_REQUEST));
         } else {
-          NotFound(req, res);
-          return;
+          next(err);
         }
-        res.status(STATUS.ERROR.SERVER).send({ message: MESSAGE.ERROR.SERVER });
       });
   }
 }

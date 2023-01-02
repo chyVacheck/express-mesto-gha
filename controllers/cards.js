@@ -3,6 +3,11 @@ const { MESSAGE, STATUS } = require('../utils/constants');
 const { NotFound } = require('../utils/NotFound');
 const card = require('../models/Card');
 
+// ? ошибки
+const { NotFoundError } = require('../errors/NotFoundError');
+const { ForbiddenError } = require('../errors/ForbiddenError');
+const { BadRequestError } = require('../errors/BadRequestError');
+
 class Cards {
   // ? возвращает все карточки
   getAll(req, res) {
@@ -38,26 +43,34 @@ class Cards {
   }
 
   // ? удаляет карточку
-  deleteOne(req, res) {
-    card.findByIdAndDelete(req.params.cardsID)
-      .then((cards) => {
-        if (cards) {
-          res.send({ message: cards });
-        } else {
-          NotFound();
+  deleteOne(req, res, next) {
+    const userId = req.user._id;
+
+    card.findById({ _id: req.params.cardsID })
+      .then((data) => {
+        if (!data) {
+          throw new NotFoundError(MESSAGE.ERROR.NOT_FOUND);
         }
+        if (!data.owner.equals(userId)) {
+          throw new ForbiddenError(MESSAGE.ERROR.FORBIDDEN);
+        }
+        card.findByIdAndDelete({ _id: req.params.cardsID })
+          .orFail(() => new NotFoundError(MESSAGE.ERROR.NOT_FOUND))
+          .then(() => {
+            res.send({ message: MESSAGE.INFO.DELETE });
+          });
       })
       .catch((err) => {
         if (err.name === 'CastError') {
-          res.status(STATUS.ERROR.BAD_REQUEST).send({ message: MESSAGE.ERROR.BAD_REQUEST });
+          next(new BadRequestError(MESSAGE.ERROR.BAD_REQUEST));
         } else {
-          res.status(STATUS.ERROR.SERVER).send({ message: MESSAGE.ERROR.SERVER });
+          next(err);
         }
       });
   }
 
   // ? добавляем лайк на карточке
-  likeCard(req, res) {
+  likeCard(req, res, next) {
     card.findByIdAndUpdate(
       req.params.cardId,
       { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
@@ -73,13 +86,13 @@ class Cards {
         if (err.name === 'CastError') {
           res.status(STATUS.ERROR.BAD_REQUEST).send({ message: MESSAGE.ERROR.BAD_REQUEST });
         } else {
-          res.status(STATUS.ERROR.SERVER).send({ message: MESSAGE.ERROR.SERVER });
+          next(err);
         }
       });
   }
 
   // ? убираем лайк на карточке
-  dislikeCard(req, res) {
+  dislikeCard(req, res, next) {
     card.findByIdAndUpdate(
       req.params.cardId,
       { $pull: { likes: req.user._id } }, // убрать _id из массива
@@ -95,7 +108,7 @@ class Cards {
         if (err.name === 'CastError') {
           res.status(STATUS.ERROR.BAD_REQUEST).send({ message: MESSAGE.ERROR.BAD_REQUEST });
         } else {
-          res.status(STATUS.ERROR.SERVER).send({ message: MESSAGE.ERROR.SERVER });
+          next(err);
         }
       });
   }
