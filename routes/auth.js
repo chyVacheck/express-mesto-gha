@@ -1,7 +1,7 @@
 const routerAuth = require('express').Router();
 const { Joi, celebrate } = require('celebrate');
 const { users } = require('../controllers/users');
-// const { limiter } = require('../middlewares/Limiter');
+const { limiter } = require('../middlewares/Limiter');
 // ? из констант
 const { isThisURL, VALID_VALUES } = require('../utils/constants');
 
@@ -15,7 +15,7 @@ routerAuth.post('/signup', celebrate({
     password: Joi.string()
       .required().min(VALID_VALUES.PASSWORD.LENGTH.MIN).max(VALID_VALUES.PASSWORD.LENGTH.MAX),
   }),
-}), /* limiter.createAccount, */ users.createOne);
+}), limiter.createAccount, users.createOne);
 
 // * авторизация
 routerAuth.post('/signin', celebrate({
