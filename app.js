@@ -1,10 +1,21 @@
+require('dotenv').config();
 const bodyParser = require('body-parser');
 const express = require('express');
 const mongoose = require('mongoose');
+const helmet = require('helmet');
+const { errors } = require('celebrate');
+// * свои
 const { NotFound } = require('./utils/NotFound');
+// ? роутеры
+const routerAuth = require('./routes/auth');
+const router = require('./routes/main');
 
-const routerUsers = require('./routes/users');
-const routerCards = require('./routes/cards');
+// ? middlewares
+const { handleErrors } = require('./middlewares/HandleErrors');
+const { limiter } = require('./middlewares/Limiter');
+const auth = require('./middlewares/Auth');
+const cors = require('./middlewares/Cors');
+const { Logger } = require('./middlewares/Logger');
 
 // ? объявление порт`а
 const { PORT = 3000 } = process.env;
@@ -12,21 +23,38 @@ const { PORT = 3000 } = process.env;
 const app = express();
 
 app.use(bodyParser.json());
-app.use((req, res, next) => {
-  req.user = {
-    _id: '6383552177a97ac698270efa',
-  };
-  next();
-});
+app.use(express.json());
 
-app.use('/users', routerUsers);
-app.use('/cards', routerCards);
+// * CORS
+app.use(cors);
+
+// * protection
+app.use(helmet());
+app.use(limiter.simpleRequest);
+
+// * requests logger
+app.use(Logger.request);
+
+// * routes
+app.use(routerAuth);
+app.use(auth, router);
 app.use('*', NotFound);
 
-// ? подключаемся к серверу mongo
-mongoose.connect('mongodb://localhost:27017/mestodb', () => {
-  console.log('connected to MongoDB');
-  app.listen(PORT, () => {
-    console.log(`connected to port: [${PORT}]`);
+// ? errors logger
+app.use(Logger.error);
+
+// ? валидация ошибок
+app.use(errors());
+app.use(handleErrors);
+
+try {
+  // ? подключаемся к серверу mongo
+  mongoose.connect('mongodb://localhost:27017/mestodb', () => {
+    console.log('Сonnected to MongoDB');
+    app.listen(PORT, () => {
+      console.log(`Сonnected to port: [${PORT}]`);
+    });
   });
-});
+} catch (error) {
+  console.log(error);
+}
