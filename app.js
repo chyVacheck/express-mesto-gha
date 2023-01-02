@@ -1,5 +1,4 @@
 require('dotenv').config();
-const bodyParser = require('body-parser');
 const express = require('express');
 const mongoose = require('mongoose');
 const helmet = require('helmet');
@@ -22,7 +21,6 @@ const { PORT = 3000 } = process.env;
 
 const app = express();
 
-app.use(bodyParser.json());
 app.use(express.json());
 
 // * CORS
