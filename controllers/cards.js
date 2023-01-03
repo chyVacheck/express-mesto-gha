@@ -1,6 +1,6 @@
 /* eslint-disable class-methods-use-this */
+/* eslint-disable import/no-unresolved */
 const { MESSAGE, STATUS } = require('../utils/constants');
-const { NotFound } = require('../utils/NotFound');
 const card = require('../models/Card');
 
 // ? ошибки
@@ -10,34 +10,23 @@ const { BadRequestError } = require('../errors/BadRequestError');
 
 class Cards {
   // ? возвращает все карточки
-  getAll(req, res) {
+  getAll(req, res, next) {
     card.find({})
-      .then((cards) => {
-        if (cards) {
-          res.send({ data: cards });
-        } else {
-          NotFound();
-        }
-      })
-      .catch((err) => {
-        if (err.name === 'CastError') {
-          res.status(STATUS.ERROR.BAD_REQUEST).send({ message: MESSAGE.ERROR.BAD_REQUEST });
-        } else {
-          res.status(STATUS.ERROR.SERVER).send({ message: MESSAGE.ERROR.SERVER });
-        }
-      });
+      .populate(['likes', 'owner'])
+      .then((cards) => res.send(cards))
+      .catch(next);
   }
 
   // ? создает карточку
-  createOne(req, res) {
+  createOne(req, res, next) {
     const { name, link } = req.body;
     card.create({ name, link, owner: req.user._id })
       .then((data) => res.status(STATUS.INFO.CREATED).send({ message: `CARD ${MESSAGE.INFO.CREATED}`, Data: data }))
       .catch((err) => {
         if (err.name === 'ValidationError') {
-          res.status(STATUS.ERROR.BAD_REQUEST).send({ message: MESSAGE.ERROR.BAD_REQUEST });
+          next(() => { (new BadRequestError(MESSAGE.ERROR.BAD_REQUEST)) });
         } else {
-          res.status(STATUS.ERROR.SERVER).send({ message: MESSAGE.ERROR.SERVER });
+          next(err);
         }
       });
   }
@@ -46,15 +35,15 @@ class Cards {
   deleteOne(req, res, next) {
     const userId = req.user._id;
 
-    card.findById({ _id: req.params.cardsID })
+    card.findById({ _id: req.params.cardId })
       .then((data) => {
         if (!data) {
           throw new NotFoundError(MESSAGE.ERROR.NOT_FOUND);
         }
         if (!data.owner.equals(userId)) {
-          throw new ForbiddenError(MESSAGE.ERROR.FORBIDDEN);
+          () => new ForbiddenError(MESSAGE.ERROR.FORBIDDEN);
         }
-        card.findByIdAndDelete({ _id: req.params.cardsID })
+        card.findByIdAndDelete({ _id: req.params.cardId })
           .orFail(() => new NotFoundError(MESSAGE.ERROR.NOT_FOUND))
           .then(() => {
             res.send({ message: MESSAGE.INFO.DELETE });
@@ -64,6 +53,7 @@ class Cards {
         if (err.name === 'CastError') {
           next(new BadRequestError(MESSAGE.ERROR.BAD_REQUEST));
         } else {
+          console.log(err);
           next(err);
         }
       });
@@ -76,15 +66,14 @@ class Cards {
       { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
       { new: true },
     )
-      .then((data) => {
-        if (data === null) {
-          return res.status(STATUS.ERROR.NOT_FOUND).send({ message: `CARD ${MESSAGE.ERROR.NOT_FOUND}` });
-        }
-        return res.status(STATUS.INFO.OK).send({ message: `LIKE ${MESSAGE.INFO.PUT}` });
+      .orFail(() => new NotFoundError(MESSAGE.ERROR.NOT_FOUND))
+      .populate(['likes', 'owner'])
+      .then((newCard) => {
+        res.status(STATUS.INFO.OK).send({ data: newCard });
       })
       .catch((err) => {
         if (err.name === 'CastError') {
-          res.status(STATUS.ERROR.BAD_REQUEST).send({ message: MESSAGE.ERROR.BAD_REQUEST });
+          next(() => new BadRequestError(MESSAGE.ERROR.BAD_REQUEST));
         } else {
           next(err);
         }
@@ -98,15 +87,16 @@ class Cards {
       { $pull: { likes: req.user._id } }, // убрать _id из массива
       { new: true },
     )
-      .then((data) => {
-        if (data === null) {
-          return res.status(STATUS.ERROR.NOT_FOUND).send({ message: `CARD ${MESSAGE.ERROR.NOT_FOUND}` });
-        }
-        return res.status(STATUS.INFO.OK).send({ message: `like ${MESSAGE.INFO.DELETE}` });
+      .orFail(() => new NotFoundError(MESSAGE.ERROR.NOT_FOUND))
+      .populate(['likes', 'owner'])
+      .then((newCard) => {
+        res.status(STATUS.INFO.OK).send({ data: newCard });
       })
       .catch((err) => {
         if (err.name === 'CastError') {
-          res.status(STATUS.ERROR.BAD_REQUEST).send({ message: MESSAGE.ERROR.BAD_REQUEST });
+          console.log(err);
+          console.log(req.params.cardId);
+          next(new BadRequestError(MESSAGE.ERROR.BAD_REQUEST));
         } else {
           next(err);
         }
