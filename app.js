@@ -2,6 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const helmet = require('helmet');
+const cookieParser = require('cookie-parser');
+const cors = require('cors');
 const { errors } = require('celebrate');
 // * свои
 const { NotFound } = require('./utils/NotFound');
@@ -13,22 +15,24 @@ const router = require('./routes/main');
 const { handleErrors } = require('./middlewares/HandleErrors');
 const { limiter } = require('./middlewares/Limiter');
 const auth = require('./middlewares/Auth');
-const cors = require('./middlewares/Cors');
 const { Logger } = require('./middlewares/Logger');
+
+const { DEFAULT_VALUES } = require('./utils/constants');
 
 // ? объявление порт`а
 const { PORT = 3000 } = process.env;
 
 const app = express();
 
-app.use(express.json());
-
 // * CORS
-app.use(cors);
+app.use(cors(DEFAULT_VALUES.CORS_OPTIONS));
 
 // * protection
 app.use(helmet());
 app.use(limiter.simpleRequest);
+
+app.use(cookieParser());
+app.use(express.json());
 
 // * requests logger
 app.use(Logger.request);
