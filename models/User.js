@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcrypt');
 const NotAuthorized = require('../errors/NotAuthorized');
-
+// ? из констант
 const { MESSAGE, DEFAULT_VALUES, VALID_VALUES } = require('../utils/constants');
 
 const userSchema = new mongoose.Schema({
@@ -33,6 +33,7 @@ const userSchema = new mongoose.Schema({
   },
   email: {
     type: String,
+    unique: true,
     required: true,
     validate: {
       validator(email) {
