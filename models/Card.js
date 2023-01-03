@@ -1,12 +1,14 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
+// ? из констант
+const { VALID_VALUES } = require('../utils/constants');
 
 const cardSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
-    maxlength: 30,
-    minlength: 2,
+    maxlength: VALID_VALUES.TEXT.LENGTH.MAX,
+    minlength: VALID_VALUES.TEXT.LENGTH.MIN,
   },
   link: {
     type: String,
@@ -30,7 +32,6 @@ const cardSchema = new mongoose.Schema({
   }],
   createdAt: {
     type: Date,
-    require: true,
     default: Date.now,
   },
 });
