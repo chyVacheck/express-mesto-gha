@@ -1,6 +1,6 @@
 const { STATUS } = require('../utils/constants');
 
-class NotAuthorized extends Error {
+module.exports = class NotAuthorized extends Error {
   constructor(errMessage) {
     super(errMessage);
     this.statusCode = STATUS.ERROR.NOT_AUTHORIZED;
@@ -8,4 +8,3 @@ class NotAuthorized extends Error {
   }
 }
 
-module.exports = NotAuthorized;

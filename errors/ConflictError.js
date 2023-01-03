@@ -1,4 +1,4 @@
-class ConflictError extends Error {
+module.exports.BadRequestError = class ConflictError extends Error {
   constructor(errMessage) {
     super(errMessage);
     this.statusCode = 409;
@@ -6,4 +6,3 @@ class ConflictError extends Error {
   }
 }
 
-module.exports = ConflictError;
