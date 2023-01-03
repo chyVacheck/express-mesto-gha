@@ -61,6 +61,11 @@ const DEFAULT_VALUES = {
     AVATAR: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
   },
   ALLOWED_METHODS: 'GET,HEAD,POST,PATCH,DELETE',
+  CORS_OPTIONS: {
+    origin: ['localhost:3000', '0.0.0.0:3000', 'myMesto.nomoredomains.club', 'api.mymesto.nomoredomains.club'],
+    optionsSuccessStatus: 200,
+    credentials: true,
+  },
 };
 
 const VALID_VALUES = {
