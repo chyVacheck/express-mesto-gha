@@ -8,15 +8,15 @@ const { isThisURL, VALID_VALUES } = require('../utils/constants');
 // * возвращает всех пользователей
 routerUsers.get('/', users.getAll);
 
+// * возвращает текущего пользователя
+routerUsers.get('/me', users.getMe);
+
 // * возвращает пользователя по _id
 routerUsers.get('/:userId', celebrate({
   params: Joi.object().keys({
     userId: Joi.string().hex().length(VALID_VALUES.ID_LENGTH),
   }),
 }), users.getOne);
-
-// * возвращает текущего пользователя
-routerUsers.get('/me', users.getMe);
 
 // * обновляет профиль
 routerUsers.patch('/me', celebrate({
