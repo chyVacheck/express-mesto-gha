@@ -7,20 +7,26 @@ const { MESSAGE } = require('../utils/constants');
 const { NODE_ENV, JWT_SECRET } = process.env;
 
 module.exports = (req, res, next) => {
-  const { authorization } = req.headers;
-  if (!authorization || !authorization.startsWith('Bearer ')) {
-    return next(new NotAuthorized(MESSAGE.ERROR.NOT_AUTHORIZED));
+  const token = req.cookies.jwt;
+
+  if (!req.body === {}) {
+    console.log(req.body);
   }
 
-  const token = authorization.replace('Bearer ', '');
+
+  if (!token) {
+    next(new NotAuthorized(MESSAGE.ERROR.NOT_AUTHORIZED));
+    return;
+  }
+
   let payload;
 
   try {
     payload = jwt.verify(token, NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret');
   } catch (error) {
-    return next(new NotAuthorized(MESSAGE.ERROR.NOT_AUTHORIZED));
+    next(new NotAuthorized(MESSAGE.ERROR.NOT_AUTHORIZED));
   }
 
-  req.user = payload;
-  return next();
+  req.user = { _id: payload };
+  next();
 };
