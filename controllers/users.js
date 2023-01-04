@@ -16,9 +16,15 @@ const NotFoundError = require('../errors/NotFoundError');
 const { NODE_ENV, JWT_SECRET } = process.env;
 
 // * кастомные ошибки
-const NotAuthorized = require('../errors/NotAuthorized');
-const BadRequestError = require('../errors/BadRequestError');
-const ConflictError = require('../errors/ConflictError');
+const { BadRequestError, ConflictError, NotAuthorized } = require('../errors/AllErrors');
+
+function setInfoError(err, next) {
+  if ((err.name === 'ValidationError') || (err.name === 'CastError')) {
+    next(new BadRequestError(MESSAGE.ERROR.BAD_REQUEST));
+  } else {
+    next(err);
+  }
+}
 
 class Users {
   // * POST
@@ -65,37 +71,22 @@ class Users {
         res.send({ message: 'User is authorized!', token });
       })
       .catch((err) => {
-        if (err.message === 'Email is incorrect') {
-          return next(new NotAuthorized('Email or password is incorrect!'));
-        }
         next(err);
       });
   }
 
   // * GET
   // ? возвращает всех пользователей
-  getAll(req, res) {
-    user.find({})
-      .then((users) => {
-        if (users) {
-          res.send({ data: users });
-        } else {
-          NotFound();
-        }
-      })
-      .catch((err) => {
-        if (err.name === 'CastError') {
-          res.status(STATUS.ERROR.BAD_REQUEST).send({ message: MESSAGE.ERROR.BAD_REQUEST });
-        } else {
-          res.status(STATUS.ERROR.SERVER).send({ message: MESSAGE.ERROR.SERVER });
-        }
-      });
+  getAll(req, res, next) {
+    User.find({})
+      .then((users) => res.send(users))
+      .catch(next);
   }
 
   // ? возвращает пользователя по _id
   getOne(req, res, next) {
     user.findById(req.params.userId)
-      .orFail(new Error('NotValid'))
+      .orFail(() => new NotFoundError(MESSAGE.ERROR.NOT_FOUND))
       .then((data) => {
         res.send({ user: data });
       })
@@ -108,10 +99,11 @@ class Users {
       });
   }
 
+  // ? возвращает текущего пользователя по _id
   getMe(req, res, next) {
     user.findById(req.user._id)
       .orFail(() => new NotFoundError(MESSAGE.ERROR.NOT_FOUND))
-      .then((data) => res.send(data))
+      .then((user) => res.send({ data: user }))
       .catch(next);
   }
 
@@ -125,17 +117,15 @@ class Users {
       { name, about },
       { new: true, runValidators: true },
     )
-      .orFail(new Error('NotValid'))
+      .orFail(() => new NotFoundError(MESSAGE.ERROR.NOT_FOUND))
       .then(() => {
-        res.status(STATUS.INFO.OK).send({ message: `INFO ${MESSAGE.INFO.PATCH}`, Name: name, About: about });
+        res.status(STATUS.INFO.OK)
+          .send({
+            message: `INFO ${MESSAGE.INFO.PATCH}`,
+            data: { name: name, about: about }
+          });
       })
-      .catch((err) => {
-        if ((err.name === 'ValidationError') || (err.name === 'CastError')) {
-          next(new NotFoundError(MESSAGE.ERROR.NOT_FOUND));
-        } else {
-          next(err);
-        }
-      });
+      .catch((err) => setInfoError(err, next));
   }
 
   // ? устанавливает новый аватар пользователя
@@ -146,20 +136,11 @@ class Users {
       { avatar },
       { new: true, runValidators: true },
     )
+      .orFail(() => new NotFoundError(MESSAGE.ERROR.NOT_FOUND))
       .then((data) => {
-        if (data) {
-          res.status(STATUS.INFO.OK).send({ message: `AVATAR ${MESSAGE.INFO.PATCH}`, avatar: data });
-        } else {
-          res.status(STATUS.ERROR.NOT_FOUND).send({ message: `USER ${MESSAGE.ERROR.NOT_FOUND}` });
-        }
+        res.status(STATUS.INFO.OK).send({ message: `AVATAR ${MESSAGE.INFO.PATCH}`, avatar: data });
       })
-      .catch((err) => {
-        if ((err.name === 'ValidationError') || (err.name === 'CastError')) {
-          next(new BadRequestError(MESSAGE.ERROR.BAD_REQUEST));
-        } else {
-          next(err);
-        }
-      });
+      .catch((err) => setInfoError(err, next));
   }
 }
 

@@ -4,9 +4,7 @@ const { MESSAGE, STATUS } = require('../utils/constants');
 const card = require('../models/Card');
 
 // ? ошибки
-const { NotFoundError } = require('../errors/NotFoundError');
-const { ForbiddenError } = require('../errors/ForbiddenError');
-const { BadRequestError } = require('../errors/BadRequestError');
+const { BadRequestError, ForbiddenError, NotFoundError } = require('../errors/AllErrors');
 
 class Cards {
   // ? возвращает все карточки
@@ -24,7 +22,7 @@ class Cards {
       .then((data) => res.status(STATUS.INFO.CREATED).send({ message: `CARD ${MESSAGE.INFO.CREATED}`, Data: data }))
       .catch((err) => {
         if (err.name === 'ValidationError') {
-          next(() => { (new BadRequestError(MESSAGE.ERROR.BAD_REQUEST)) });
+          next(new BadRequestError(MESSAGE.ERROR.BAD_REQUEST));
         } else {
           next(err);
         }
@@ -40,13 +38,14 @@ class Cards {
         if (!data) {
           throw new NotFoundError(MESSAGE.ERROR.NOT_FOUND);
         }
+        console.log(data);
         if (!data.owner.equals(userId)) {
-          () => new ForbiddenError(MESSAGE.ERROR.FORBIDDEN);
+          throw new ForbiddenError(MESSAGE.ERROR.FORBIDDEN);
         }
-        card.findByIdAndDelete({ _id: req.params.cardId })
+        return card.findByIdAndDelete({ _id: req.params.cardId })
           .orFail(() => new NotFoundError(MESSAGE.ERROR.NOT_FOUND))
           .then(() => {
-            res.send({ message: MESSAGE.INFO.DELETE });
+            res.status(STATUS.INFO.OK).send({ message: MESSAGE.INFO.DELETE });
           });
       })
       .catch((err) => {
@@ -73,7 +72,7 @@ class Cards {
       })
       .catch((err) => {
         if (err.name === 'CastError') {
-          next(() => new BadRequestError(MESSAGE.ERROR.BAD_REQUEST));
+          next(new BadRequestError(MESSAGE.ERROR.BAD_REQUEST));
         } else {
           next(err);
         }
@@ -94,8 +93,6 @@ class Cards {
       })
       .catch((err) => {
         if (err.name === 'CastError') {
-          console.log(err);
-          console.log(req.params.cardId);
           next(new BadRequestError(MESSAGE.ERROR.BAD_REQUEST));
         } else {
           next(err);
