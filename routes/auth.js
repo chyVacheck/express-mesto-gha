@@ -21,7 +21,7 @@ routerAuth.post('/signup', celebrate({
 routerAuth.post('/signin', celebrate({
   body: Joi.object().keys({
     email: Joi.string().required().email({ tlds: { allow: false } }),
-    password: Joi.string().required().max(VALID_VALUES.PASSWORD.LENGTH.MAX),
+    password: Joi.string().required(),
   }),
 }), users.login);
 
