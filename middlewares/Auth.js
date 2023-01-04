@@ -27,6 +27,6 @@ module.exports = (req, res, next) => {
     next(new NotAuthorized(MESSAGE.ERROR.NOT_AUTHORIZED));
   }
 
-  req.user = { _id: payload };
+  req.user = payload;
   next();
 };
