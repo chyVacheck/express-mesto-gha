@@ -4,7 +4,7 @@ const validator = require('validator');
 const MESSAGE = {
   ERROR: {
     BAD_REQUEST: 'BAD REQUEST',
-    FORBIDDEN: 'You can not do this',
+    FORBIDDEN: 'You are not allowed to do this operation',
     NOT_FOUND: 'NOT FOUND',
     NOT_AUTHORIZED: 'User is not authorized',
     SERVER: 'SERVER ERROR',
@@ -25,6 +25,7 @@ const STATUS = {
     NOT_AUTHORIZED: 401,
     FORBIDDEN: 403,
     NOT_FOUND: 404,
+    CONFLICT: 409,
     SERVER: 500,
   },
   INFO: {
