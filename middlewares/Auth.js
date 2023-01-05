@@ -9,11 +9,6 @@ const { NODE_ENV, JWT_SECRET } = process.env;
 module.exports = (req, res, next) => {
   const token = req.cookies.jwt;
 
-  if (!req.body === {}) {
-    console.log(req.body);
-  }
-
-
   if (!token) {
     next(new NotAuthorized(MESSAGE.ERROR.NOT_AUTHORIZED));
     return;
