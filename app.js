@@ -1,3 +1,4 @@
+/* eslint-disable no-console */ // ? разрешаем писать console во всем файле
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
