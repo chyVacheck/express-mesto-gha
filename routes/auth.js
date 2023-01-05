@@ -12,8 +12,7 @@ routerAuth.post('/signup', celebrate({
     about: Joi.string().min(VALID_VALUES.TEXT.LENGTH.MIN).max(VALID_VALUES.TEXT.LENGTH.MAX),
     avatar: Joi.string().custom(isThisURL),
     email: Joi.string().required().email().pattern(/^\S+@\S+\.\S+$/),
-    password: Joi.string()
-      .required().min(VALID_VALUES.PASSWORD.LENGTH.MIN).max(VALID_VALUES.PASSWORD.LENGTH.MAX),
+    password: Joi.string().required(),
   }),
 }), limiter.createAccount, users.createOne);
 
