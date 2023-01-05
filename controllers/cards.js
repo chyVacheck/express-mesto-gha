@@ -38,7 +38,6 @@ class Cards {
         if (!data) {
           throw new NotFoundError(MESSAGE.ERROR.NOT_FOUND);
         }
-        console.log(data);
         if (!data.owner.equals(userId)) {
           throw new ForbiddenError(MESSAGE.ERROR.FORBIDDEN);
         }
@@ -52,7 +51,6 @@ class Cards {
         if (err.name === 'CastError') {
           next(new BadRequestError(MESSAGE.ERROR.BAD_REQUEST));
         } else {
-          console.log(err);
           next(err);
         }
       });
