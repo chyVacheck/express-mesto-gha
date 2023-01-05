@@ -6,5 +6,4 @@ module.exports = class NotAuthorized extends Error {
     this.statusCode = STATUS.ERROR.NOT_AUTHORIZED;
     this.errorMessage = errMessage;
   }
-}
-
+};

@@ -6,4 +6,4 @@ module.exports = class ForbiddenError extends Error {
     this.statusCode = STATUS.ERROR.FORBIDDEN;
     this.errorMessage = errMessage;
   }
-}
+};

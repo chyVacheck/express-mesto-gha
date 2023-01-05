@@ -6,4 +6,4 @@ module.exports = class BadRequestError extends Error {
     this.statusCode = STATUS.ERROR.BAD_REQUEST;
     this.errorMessage = errMessage;
   }
-}
+};

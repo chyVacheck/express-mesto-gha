@@ -6,4 +6,4 @@ module.exports = class NotFoundError extends Error {
     this.statusCode = STATUS.ERROR.NOT_FOUND;
     this.errorMessage = errMessage;
   }
-}
+};
