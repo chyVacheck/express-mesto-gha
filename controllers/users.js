@@ -9,14 +9,13 @@ const user = require('../models/User');
 const { MESSAGE, STATUS } = require('../utils/constants');
 
 // * errors
-const { NotFound } = require('../utils/NotFound');
 const NotFoundError = require('../errors/NotFoundError');
 
 // * jwt
 const { NODE_ENV, JWT_SECRET } = process.env;
 
 // * кастомные ошибки
-const { BadRequestError, ConflictError, NotAuthorized } = require('../errors/AllErrors');
+const { BadRequestError, ConflictError } = require('../errors/AllErrors');
 
 function setInfoError(err, next) {
   if ((err.name === 'ValidationError') || (err.name === 'CastError')) {
@@ -78,7 +77,7 @@ class Users {
   // * GET
   // ? возвращает всех пользователей
   getAll(req, res, next) {
-    User.find({})
+    user.find({})
       .then((users) => res.send(users))
       .catch(next);
   }
@@ -103,7 +102,7 @@ class Users {
   getMe(req, res, next) {
     user.findById(req.user._id)
       .orFail(() => new NotFoundError(MESSAGE.ERROR.NOT_FOUND))
-      .then((user) => res.send({ data: user }))
+      .then((userMe) => res.send({ data: userMe }))
       .catch(next);
   }
 
@@ -122,7 +121,8 @@ class Users {
         res.status(STATUS.INFO.OK)
           .send({
             message: `INFO ${MESSAGE.INFO.PATCH}`,
-            data: { name: name, about: about }
+            // eslint-disable-next-line object-shorthand
+            data: { name: name, about: about },
           });
       })
       .catch((err) => setInfoError(err, next));
